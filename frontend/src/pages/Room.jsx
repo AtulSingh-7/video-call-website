@@ -19,6 +19,7 @@ const Room = () => {
   useEffect(() => {
     // Join room
     socket.emit("join-room", { roomId, userName });
+    console.log("Joined room:", roomId);
 
     // Get local stream
     navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
@@ -27,6 +28,7 @@ const Room = () => {
         localVideoRef.current.srcObject = stream;
       }
     });
+    console.log("Local stream:", localStream);
 
     // Another user joined
     socket.on("user-joined", async ({ userId }) => {
@@ -38,9 +40,11 @@ const Room = () => {
       localStream.getTracks().forEach((track) => {
         peerConnection.addTrack(track, localStream);
       });
+      console.log("Local stream added to peer connection");
 
       const offer = await peerConnection.createOffer();
       await peerConnection.setLocalDescription(offer);
+      console.log("Offer created");
 
       socket.emit("offer", {
         to: userId,
@@ -57,10 +61,14 @@ const Room = () => {
       localStream.getTracks().forEach((track) => {
         peerConnection.addTrack(track, localStream);
       });
+      console.log("Local stream added to peer connection");
 
       await peerConnection.setRemoteDescription(new RTCSessionDescription(sdp));
+      console.log("Remote description set");
       const answer = await peerConnection.createAnswer();
+      console.log("Answer created");
       await peerConnection.setLocalDescription(answer);
+      console.log("Local description set");
 
       socket.emit("answer", {
         to: from,
@@ -73,7 +81,9 @@ const Room = () => {
     socket.on("answer", async ({ from, sdp }) => {
       const peerConnection = peerConnections.current[from];
       await peerConnection.setRemoteDescription(new RTCSessionDescription(sdp));
+      console.log("Remote description set");
     });
+    console.log("Answer received");
 
     // ICE Candidate received
     socket.on("ice-candidate", async ({ from, candidate }) => {
@@ -82,6 +92,7 @@ const Room = () => {
         await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
       }
     });
+    console.log("ICE candidate received");
 
     return () => {
       socket.disconnect();
@@ -94,6 +105,7 @@ const Room = () => {
     const peerConnection = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
+    console.log("Peer connection created");
 
     peerConnection.onicecandidate = (event) => {
       if (event.candidate) {
@@ -110,6 +122,7 @@ const Room = () => {
       event.streams[0].getTracks().forEach((track) => {
         remoteStream.addTrack(track);
       });
+      console.log("Remote stream added to peer connection");
 
       setRemoteStreams((prev) => {
         // Avoid adding same stream twice
