@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { io } from "socket.io-client";
+import socket from "../socket";
 
-const socket = io("https://video-call-website-nine.vercel.app/"); // Update if using different host
+// const socket = io("https://89d824d78988.ngrok-free.app"); // Update if using different host
+
 
 const Room = () => {
   const { roomId } = useParams();
